@@ -43,6 +43,7 @@ k.scene("main", async ()=>{
             speed: 250,
             direction: 'down',
             isInDialog: false,
+            boundary: undefined,
         },
         "player",
     ]);
@@ -56,6 +57,13 @@ k.scene("main", async ()=>{
         const mouseAngle = player.pos.angle(worldMousePos);
         const lowerBound = 50;
         const upperBound = 125;
+
+        if(player.boundary){
+            player.isInDialog = true;
+            displayDialog(dialogueData[player.boundary], ()=> {player.isInDialog = false; player.boundary = undefined;});
+            return;
+        }
+
         if(
             mouseAngle > lowerBound &&
             mouseAngle < upperBound && 
@@ -94,7 +102,83 @@ k.scene("main", async ()=>{
         }
     })
 
+    k.onKeyDown("up", ()=>{
+        if(player.isInDialog) return;
+        player.moveBy(0, -3);
+        // player.moveTo(k.pos() , player.speed);
 
+        if(player.curAnim() !== "walk-up"){
+            player.play("walk-up");
+            player.direction = "up";
+
+            return;
+        }
+    });
+
+    k.onKeyDown("down", ()=>{
+        if(player.isInDialog) return;
+
+        player.moveBy(0, 3);
+        // player.moveTo(k.pos() , player.speed);
+
+        if(player.curAnim() !== "walk-down"){
+            player.play("walk-down");
+            player.direction = "down";
+
+            return;
+        }
+    });
+
+    k.onKeyDown("right", ()=>{
+        if(player.isInDialog) return;
+        player.flipX = false;
+
+        player.moveBy(3, 0);
+        // player.moveTo(k.pos() , player.speed);
+
+        if(player.curAnim() !== "walk-side"){
+            player.play("walk-side");
+            player.direction = "rigjt";
+
+            return;
+        }
+    });
+
+    k.onKeyDown("left", ()=>{
+        if(player.isInDialog) return;
+        player.flipX = true;
+
+        player.moveBy(-3, 0);
+        // player.moveTo(k.pos() , player.speed);
+
+        if(player.curAnim() !== "walk-side"){
+            player.play("walk-side");
+            player.direction = "left";
+
+            return;
+        }
+    });
+
+    k.onKeyRelease(()=>{
+        if(player.direction === "down"){
+            player.play("idle-down");
+            return;
+        }
+
+        if(player.direction === "up"){
+            player.play("idle-up");
+            return;
+        }
+
+        return player.play("idle-side");
+    })
+
+    k.onKeyDown("space", ()=>{
+        if(player.boundary){
+            player.isInDialog = true;
+            displayDialog(dialogueData[player.boundary], ()=> {player.isInDialog = false; player.boundary = undefined;});
+        }
+    })
     k.onMouseRelease(()=>{
         if(player.direction === "down"){
             player.play("idle-down");
@@ -122,8 +206,7 @@ k.scene("main", async ()=>{
 
                 if(boundary.name){
                     player.onCollide(boundary.name, ()=>{
-                        player.isInDialog = true;
-                        displayDialog(dialogueData[boundary.name], ()=> player.isInDialog = false);
+                        player.boundary = boundary.name;
                     })
                 }
             }
